@@ -1,4 +1,5 @@
-﻿from fastapi import FastAPI, Form, HTTPException, status, Header, Request
+﻿import random
+from fastapi import FastAPI, Form, HTTPException, status, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import sqlite3
@@ -256,3 +257,4 @@ def get_user_inbox(phone_number: str):
     messages = [{"sender": r[0], "body": r[1], "code": r[2], "service": r[3]} for r in cursor.fetchall()]
     conn.close()
     return {"status": "success", "phone_number": phone_number, "messages": messages}
+
