@@ -210,7 +210,7 @@
             const amount = parseFloat(document.getElementById('fundAmount').value);
             
             let handler = PaystackPop.setup({
-                key: 'pk_live_your_paystack_public_key', // Replace with your Paystack Public Key
+                key: 'pk_test_eb38d65928927aab4d9f072d336b2424500eb2af', // Replace with your Paystack Public Key
                 email: `${userId}@fredonly.com`,
                 amount: amount * 100, // Paystack expects amount in Kobo
                 currency: 'NGN',
@@ -298,4 +298,6 @@
     </script>
 </body>
 </html>
+
+
 
