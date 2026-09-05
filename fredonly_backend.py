@@ -258,3 +258,4 @@ def get_user_inbox(phone_number: str):
     conn.close()
     return {"status": "success", "phone_number": phone_number, "messages": messages}
 
+
