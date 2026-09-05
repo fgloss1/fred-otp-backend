@@ -264,3 +264,21 @@ def get_user_inbox(phone_number: str):
 
 # Trigger deploy update - 20260905-235734
 
+
+# --- AUTO MIGRATION: Fixes the missing activation_id column ---
+try:
+    import sqlite3
+    # Connect to the default sqlite db file used in your backend
+    db_file = "database.db"
+    conn = sqlite3.connect(db_file)
+    cursor = conn.cursor()
+    cursor.execute("PRAGMA table_info(rentals)")
+    columns = [column[1] for column in cursor.fetchall()]
+    if "activation_id" not in columns:
+        cursor.execute("ALTER TABLE rentals ADD COLUMN activation_id TEXT")
+        conn.commit()
+        print("Successfully added missing activation_id column to rentals table.")
+    conn.close()
+except Exception as e:
+    print(f"Migration check notice: {e}")
+# -------------------------------------------------------------
