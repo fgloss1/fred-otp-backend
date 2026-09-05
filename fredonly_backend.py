@@ -1,4 +1,4 @@
-﻿import random
+import random
 from fastapi import FastAPI, Form, HTTPException, status, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -261,3 +261,5 @@ def get_user_inbox(phone_number: str):
 
 
 # Trigger deploy update
+
+# Trigger deploy update - 20260905-235734
