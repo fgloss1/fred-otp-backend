@@ -18,14 +18,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-DB_FILE = "fredonly.db"
+DB_FILE = "fredonly_v3.db"
 
 # Replace with your actual live keys when deploying
 SMS_ACTIVATE_API_KEY = os.getenv("SMS_ACTIVATE_API_KEY", "YOUR_SMS_ACTIVATE_API_KEY")
 PAYSTACK_SECRET_KEY = os.getenv("PAYSTACK_SECRET_KEY", "sk_live_your_paystack_secret")
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=15)
     cursor = conn.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS wallets (
@@ -105,7 +105,7 @@ class RentNumberRequest(BaseModel):
 
 @app.post("/api/v1/wallet/fund")
 def fund_wallet(payload: UserFund):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=15)
     cursor = conn.cursor()
     
     cursor.execute("SELECT balance_ngn FROM wallets WHERE user_id = ?", (payload.user_id,))
@@ -134,7 +134,7 @@ async def verify_paystack_payment(request: Request):
         amount_ngn = amount_kobo / 100.0
         user_id = email.split("@")[0] # Maps email handle to user_id
         
-        conn = sqlite3.connect(DB_FILE)
+        conn = sqlite3.connect(DB_FILE, timeout=15)
         cursor = conn.cursor()
         cursor.execute("SELECT balance_ngn FROM wallets WHERE user_id = ?", (user_id,))
         row = cursor.fetchone()
@@ -152,7 +152,7 @@ async def verify_paystack_payment(request: Request):
 
 @app.get("/api/v1/wallet/{user_id}")
 def get_wallet(user_id: str):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=15)
     cursor = conn.cursor()
     cursor.execute("SELECT balance_ngn FROM wallets WHERE user_id = ?", (user_id,))
     row = cursor.fetchone()
@@ -173,7 +173,7 @@ def rent_virtual_number(payload: RentNumberRequest):
     cost = SERVICE_CATALOG[service]["price_ngn"]
     service_code = SERVICE_CATALOG[service]["code"]
     
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=15)
     cursor = conn.cursor()
     
     cursor.execute("SELECT balance_ngn FROM wallets WHERE user_id = ?", (payload.user_id,))
@@ -228,7 +228,7 @@ def rent_virtual_number(payload: RentNumberRequest):
 
 @app.post("/api/v1/sms/webhook/incoming")
 def receive_incoming_sms(From: str = Form(...), To: str = Form(...), Body: str = Form(...)):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=15)
     cursor = conn.cursor()
     
     cursor.execute("SELECT service_name, active FROM rentals WHERE phone_number = ?", (To,))
@@ -251,26 +251,18 @@ def receive_incoming_sms(From: str = Form(...), To: str = Form(...), Body: str =
 
 @app.get("/api/v1/sms/inbox/{phone_number}")
 def get_user_inbox(phone_number: str):
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=15)
     cursor = conn.cursor()
     cursor.execute("SELECT sender, body, code, service FROM messages WHERE phone_number = ?", (phone_number,))
     messages = [{"sender": r[0], "body": r[1], "code": r[2], "service": r[3]} for r in cursor.fetchall()]
     conn.close()
     return {"status": "success", "phone_number": phone_number, "messages": messages}
 
-
-
-# Trigger deploy update
-
-# Trigger deploy update - 20260905-235734
-
-
 # --- AUTO MIGRATION: Fixes the missing activation_id column ---
 try:
     import sqlite3
-    # Connect to the default sqlite db file used in your backend
-    db_file = "database.db"
-    conn = sqlite3.connect(db_file)
+    db_file = "fredonly_v3.db"
+    conn = sqlite3.connect(db_file, timeout=15)
     cursor = conn.cursor()
     cursor.execute("PRAGMA table_info(rentals)")
     columns = [column[1] for column in cursor.fetchall()]
@@ -282,4 +274,3 @@ try:
 except Exception as e:
     print(f"Migration check notice: {e}")
 # -------------------------------------------------------------
-
