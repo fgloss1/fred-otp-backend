@@ -1,0 +1,300 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FredOnly - Virtual Number Marketplace</title>
+    <script src="https://js.paystack.co/v1/inline.js"></script>
+    <style>
+        :root {
+            --bg-main: #090d16;
+            --bg-card: #131c2e;
+            --bg-input: #1b273d;
+            --border-color: #2a3b58;
+            --accent-blue: #0ea5e9;
+            --accent-green: #22c55e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        body { font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-main); color: var(--text-main); margin: 0; padding: 20px; }
+        .container { max-width: 700px; margin: auto; background: var(--bg-card); padding: 30px; border-radius: 16px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border: 1px solid var(--border-color); }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 25px; }
+        .logo { font-size: 24px; font-weight: 800; color: #38bdf8; letter-spacing: 0.5px; }
+        .logo span { color: #fff; }
+        
+        .wallet-badge { background: var(--bg-input); padding: 10px 18px; border-radius: 12px; border: 1px solid var(--border-color); text-align: right; }
+        .wallet-badge span { font-size: 18px; color: var(--accent-green); font-weight: bold; }
+
+        .card { background: var(--bg-input); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .card h3 { margin-top: 0; color: #e2e8f0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+        
+        label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 6px; font-weight: 500; }
+        input, select { width: 100%; padding: 12px; margin-bottom: 15px; background: var(--bg-main); color: white; border: 1px solid var(--border-color); border-radius: 8px; box-sizing: border-box; font-size: 14px; }
+        input:focus, select:focus { outline: none; border-color: var(--accent-blue); }
+        
+        .preset-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+        .preset-btn { background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+        .preset-btn:hover { background: var(--accent-blue); border-color: var(--accent-blue); }
+
+        button.action-btn { background: var(--accent-blue); color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; transition: background 0.2s; margin-top: 5px; }
+        button.action-btn:hover { background: #0284c7; }
+
+        .number-box { background: var(--bg-main); padding: 20px; border-radius: 10px; border: 1px dashed var(--accent-blue); text-align: center; margin-top: 15px; }
+        .phone-number { font-size: 32px; color: #facc15; font-weight: 800; letter-spacing: 2px; margin: 10px 0; }
+        
+        .message-box { background: var(--bg-main); padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid var(--accent-green); }
+        .otp-code { font-size: 24px; color: var(--accent-green); font-weight: 800; background: #052e16; padding: 4px 12px; border-radius: 6px; display: inline-block; margin-top: 5px; }
+        
+        table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px; }
+        th, td { text-align: left; padding: 8px; border-bottom: 1px solid var(--border-color); color: var(--text-muted); }
+        th { color: var(--text-main); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Fred<span>OTP</span></div>
+            <div class="wallet-badge">
+                <label style="margin:0; font-size:11px;">Available Balance</label>
+                <span id="walletBalance">₦0.00</span>
+            </div>
+        </div>
+        
+        <!-- Wallet Top-Up Card -->
+        <div class="card">
+            <h3>💳 Wallet Top-Up (Paystack / Instant)</h3>
+            <label>Username / User ID / Email Prefix:</label>
+            <input type="text" id="userId" value="william_123" onchange="fetchWallet()">
+            
+            <label>Quick Fund Presets (NGN):</label>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="setAmount(500)">₦500</button>
+                <button class="preset-btn" onclick="setAmount(1000)">₦1,000</button>
+                <button class="preset-btn" onclick="setAmount(2000)">₦2,000</button>
+                <button class="preset-btn" onclick="setAmount(5000)">₦5,000</button>
+            </div>
+            
+            <label>Custom Amount (NGN):</label>
+            <input type="number" id="fundAmount" value="1000">
+            <button class="action-btn" onclick="fundWalletDirect()">Test Credit (Instant)</button>
+            <button class="action-btn" onclick="payWithPaystack()" style="background: #22c55e;">Fund with Paystack (Card / Bank)</button>
+        </div>
+
+        <!-- Rent Virtual Number Card -->
+        <div class="card">
+            <h3>🌍 Rent Virtual Number</h3>
+            <label>Select Target Service & Region:</label>
+            <select id="serviceSelect">
+                <optgroup label="📱 Social Media & Messaging">
+                    <option value="WhatsApp">🇺🇸 WhatsApp (US) — ₦400</option>
+                    <option value="Telegram">🇺🇸 Telegram (US) — ₦250</option>
+                    <option value="Twitter / X">🇺🇸 Twitter / X (US) — ₦450</option>
+                    <option value="Instagram">🇺🇸 Instagram (US) — ₦500</option>
+                    <option value="Facebook">🇺🇸 Facebook (US) — ₦350</option>
+                    <option value="TikTok">🇺🇸 TikTok (US) — ₦400</option>
+                    <option value="Snapchat">🇺🇸 Snapchat (US) — ₦380</option>
+                    <option value="Discord">🇺🇸 Discord (US) — ₦280</option>
+                </optgroup>
+                <optgroup label="💻 Tech Giants & Email">
+                    <option value="Google / Gmail">🇺🇸 Google / Gmail (US) — ₦300</option>
+                    <option value="Microsoft / Outlook">🇺🇸 Microsoft / Outlook (US) — ₦320</option>
+                    <option value="Apple ID">🇺🇸 Apple ID (US) — ₦450</option>
+                    <option value="OpenAI / ChatGPT">🇺🇸 OpenAI / ChatGPT (US) — ₦600</option>
+                </optgroup>
+                <optgroup label="❤️ Dating & Social Discovery">
+                    <option value="Match">🇺🇸 Match (US) — ₦350</option>
+                    <option value="Tinder">🇺🇸 Tinder (US) — ₦400</option>
+                    <option value="Bumble">🇺🇸 Bumble (US) — ₦380</option>
+                </optgroup>
+                <optgroup label="💳 Finance & Crypto">
+                    <option value="Binance">🇺🇸 Binance (US) — ₦550</option>
+                    <option value="PayPal">🇺🇸 PayPal (US) — ₦500</option>
+                    <option value="Wise">🇺🇸 Wise (US) — ₦480</option>
+                    <option value="CashApp">🇺🇸 CashApp (US) — ₦600</option>
+                </optgroup>
+            </select>
+            <button class="action-btn" onclick="rentNumber()" style="background: #10b981;">Get Virtual Number</button>
+        </div>
+
+        <!-- Active Rental & Live Inbox Card -->
+        <div class="card" id="activeCard" style="display:none;">
+            <h3>📥 Live SMS Inbox</h3>
+            <div class="number-box">
+                <label>Your Active Number for <span id="activeService" style="color:#38bdf8;"></span>:</label>
+                <div class="phone-number" id="assignedNumber">--</div>
+                <button class="preset-btn" onclick="navigator.clipboard.writeText(document.getElementById('assignedNumber').innerText); alert('Number copied!');">📋 Copy Number</button>
+                <p style="font-size:12px; color: var(--text-muted); margin-top: 10px;">Lease expires in: <span id="timer" style="color:#facc15; font-weight:bold;">10:00</span></p>
+            </div>
+            
+            <div id="inboxContainer" style="margin-top: 15px;">
+                <label>Incoming Messages:</label>
+                <div id="inbox" style="color: var(--text-muted); font-size: 14px; font-style: italic;">Waiting for incoming text messages from carrier webhook...</div>
+            </div>
+        </div>
+
+        <!-- Transaction History Ledger -->
+        <div class="card">
+            <h3>📊 Recent Transactions</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody id="txTable">
+                    <tr><td colspan="3" style="text-align:center;">No recent transactions.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+        let pollInterval = null;
+        let countdownInterval = null;
+
+        window.onload = function() {
+            fetchWallet();
+        }
+
+        function setAmount(val) {
+            document.getElementById('fundAmount').value = val;
+        }
+
+        async function fetchWallet() {
+            const userId = document.getElementById('userId').value;
+            try {
+                const res = await fetch(`${API_URL}/api/v1/wallet/${userId}`);
+                const data = await res.json();
+                document.getElementById('walletBalance').innerText = `₦${data.balance_ngn.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                
+                const txTable = document.getElementById('txTable');
+                if (data.transactions && data.transactions.length > 0) {
+                    txTable.innerHTML = data.transactions.map(t => `
+                        <tr>
+                            <td style="color: ${t.type === 'CREDIT' ? '#22c55e' : '#ef4444'}; font-weight:bold;">${t.type}</td>
+                            <td>₦${t.amount.toLocaleString()}</td>
+                            <td>${t.desc}</td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function fundWalletDirect() {
+            const userId = document.getElementById('userId').value;
+            const amount = parseFloat(document.getElementById('fundAmount').value);
+            try {
+                const res = await fetch(`${API_URL}/api/v1/wallet/fund`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId, amount_ngn: amount})
+                });
+                const data = await res.json();
+                document.getElementById('walletBalance').innerText = `₦${data.new_balance_ngn.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                fetchWallet();
+                alert(`Successfully credited ₦${amount.toLocaleString()} to your wallet!`);
+            } catch (err) {
+                alert("Error connecting to server.");
+            }
+        }
+
+        function payWithPaystack() {
+            const userId = document.getElementById('userId').value;
+            const amount = parseFloat(document.getElementById('fundAmount').value);
+            
+            let handler = PaystackPop.setup({
+                key: 'pk_live_your_paystack_public_key', // Replace with your Paystack Public Key
+                email: `${userId}@fredonly.com`,
+                amount: amount * 100, // Paystack expects amount in Kobo
+                currency: 'NGN',
+                callback: function(response) {
+                    alert('Payment successful! Reference: ' + response.reference);
+                    fundWalletDirect(); // Credits the account upon successful callback
+                },
+                onClose: function() {
+                    alert('Transaction canceled.');
+                }
+            });
+            handler.openIframe();
+        }
+
+        async function rentNumber() {
+            const userId = document.getElementById('userId').value;
+            const service = document.getElementById('serviceSelect').value;
+            
+            try {
+                const res = await fetch(`${API_URL}/api/v1/numbers/rent`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({user_id: userId, service_name: service})
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.detail || "Error renting number");
+                    return;
+                }
+
+                document.getElementById('activeCard').style.display = 'block';
+                document.getElementById('activeService').innerText = data.service;
+                document.getElementById('assignedNumber').innerText = data.phone_number;
+                
+                fetchWallet();
+                startTimer(600);
+                startInboxPolling(data.phone_number);
+                alert(`Successfully rented virtual number for ${data.service}!`);
+            } catch (err) {
+                alert("Failed to connect to backend server.");
+            }
+        }
+
+        function startTimer(duration) {
+            if (countdownInterval) clearInterval(countdownInterval);
+            let timer = duration, minutes, seconds;
+            countdownInterval = setInterval(() => {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                document.getElementById('timer').innerText = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('timer').innerText = "EXPIRED";
+                }
+            }, 1000);
+        }
+
+        function startInboxPolling(phone) {
+            if (pollInterval) clearInterval(pollInterval);
+            pollInterval = setInterval(async () => {
+                try {
+                    const res = await fetch(`${API_URL}/api/v1/sms/inbox/${encodeURIComponent(phone)}`);
+                    const data = await res.json();
+                    const inboxDiv = document.getElementById('inbox');
+                    
+                    if (data.messages && data.messages.length > 0) {
+                        inboxDiv.innerHTML = data.messages.map(m => `
+                            <div class="message-box">
+                                <strong>From:</strong> ${m.sender}<br>
+                                <div style="margin: 6px 0;">${m.body}</div>
+                                <strong>Extracted Code:</strong><br>
+                                <span class="otp-code">${m.code || 'Scanning...'}</span>
+                            </div>
+                        `).join('');
+                    }
+                } catch(e) {}
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
