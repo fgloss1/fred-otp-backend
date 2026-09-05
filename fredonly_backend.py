@@ -213,6 +213,12 @@ def rent_virtual_number(payload: RentNumberRequest):
                    (phone_number, payload.user_id, service, activation_id, now))
     cursor.execute("INSERT INTO transactions (user_id, type, amount_ngn, description, timestamp) VALUES (?, ?, ?, ?, ?)",
                    (payload.user_id, "DEBIT", cost, f"Rental: {service} ({phone_number})", now))
+    # AUTO-INJECT MOCK SMS FOR TESTING WITHOUT WEBHOOKS
+    if activation_id == "mock_act_123":
+        mock_code = str(random.randint(100000, 999999))
+        mock_body = f"Your {service} security code is {mock_code}"
+        cursor.execute("INSERT INTO messages (phone_number, sender, body, code, service) VALUES (?, ?, ?, ?, ?)",
+                       (phone_number, "System-Mock", mock_body, mock_code, service))
     
     conn.commit()
     conn.close()
