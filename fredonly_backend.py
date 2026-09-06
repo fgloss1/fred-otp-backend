@@ -24,7 +24,8 @@ engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# FIX: Switched to 'pbkdf2_sha256'. No length limits, 100% cloud-safe!
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 class UserWallet(Base):
     __tablename__ = "user_wallets"
@@ -66,9 +67,8 @@ def signup(payload: AuthPayload):
         if existing_user:
             return {"error": "Username already taken. Please choose another or sign in."}
         
-        # Manually truncate to 72 bytes to satisfy bcrypt limitation
-        safe_password = payload.password[:72]
-        hashed_password = pwd_context.hash(safe_password)
+        # PBKDF2 handles any length automatically, no truncation needed
+        hashed_password = pwd_context.hash(payload.password)
         
         new_user = UserWallet(
             user_id=payload.username, 
@@ -90,10 +90,7 @@ def signin(payload: AuthPayload):
     try:
         user = db.query(UserWallet).filter(UserWallet.user_id == payload.username).first()
         
-        # Manually truncate to 72 bytes here as well
-        safe_password = payload.password[:72]
-        
-        if not user or not user.password_hash or not pwd_context.verify(safe_password, user.password_hash):
+        if not user or not user.password_hash or not pwd_context.verify(payload.password, user.password_hash):
             return {"error": "Invalid username or password."}
             
         return {"success": True, "message": "Login successful!"}

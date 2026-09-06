@@ -2,5 +2,4 @@
 uvicorn
 sqlalchemy
 passlib
-bcrypt
 requests
