@@ -11,7 +11,6 @@ import os
 
 app = FastAPI()
 
-# CORS Setup
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,13 +19,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Database Setup (SQLite)
 SQLALCHEMY_DATABASE_URL = "sqlite:///./fredonly.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
-# Password Hashing setup
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 class UserWallet(Base):
@@ -39,14 +36,13 @@ class TransactionLedger(Base):
     __tablename__ = "transactions"
     id = Column(String, primary_key=True, index=True)
     user_id = Column(String, index=True)
-    type = Column(String)  # CREDIT or DEBIT
+    type = Column(String)
     amount = Column(Float)
     desc = Column(String)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
 Base.metadata.create_all(bind=engine)
 
-# Pydantic Schemas
 class AuthPayload(BaseModel):
     username: str
     password: str
@@ -59,7 +55,6 @@ class RentPayload(BaseModel):
     user_id: str
     service_name: str
 
-# 5SIM API Configuration
 FIVESIM_API_KEY = os.getenv("FIVESIM_API_KEY", "YOUR_FIVESIM_API_KEY")
 FIVESIM_BASE_URL = "https://5sim.net/v1"
 
@@ -71,7 +66,7 @@ def signup(payload: AuthPayload):
         if existing_user:
             return {"error": "Username already taken. Please choose another or sign in."}
         
-        # FIX: Truncate password to 72 characters to prevent bcrypt crash
+        # Manually truncate to 72 bytes to satisfy bcrypt limitation
         safe_password = payload.password[:72]
         hashed_password = pwd_context.hash(safe_password)
         
@@ -95,7 +90,7 @@ def signin(payload: AuthPayload):
     try:
         user = db.query(UserWallet).filter(UserWallet.user_id == payload.username).first()
         
-        # FIX: Truncate password to 72 characters before verifying
+        # Manually truncate to 72 bytes here as well
         safe_password = payload.password[:72]
         
         if not user or not user.password_hash or not pwd_context.verify(safe_password, user.password_hash):
@@ -137,7 +132,7 @@ def fund_wallet(payload: FundPayload):
         user_id=payload.user_id,
         type="CREDIT",
         amount=payload.amount_ngn,
-        desc=f"Funded via Paystack / Direct Test"
+        desc="Funded via Paystack / Direct Test"
     )
     db.add(tx)
     db.commit()
