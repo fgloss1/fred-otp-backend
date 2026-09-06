@@ -107,17 +107,23 @@
             <div class="logo">
                 <i class="fa-solid fa-shield-halved" style="color:var(--accent-blue)"></i> Fred<span>OTP</span>
             </div>
-            <div class="wallet-badge">
-                <label>Available Balance</label>
-                <span id="walletBalance">₦0.00</span>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: var(--text-muted); display: block;">Logged in as:</span>
+                    <span id="displayUser" style="color: var(--accent-blue); font-weight: bold; font-size: 14px;">--</span>
+                </div>
+                <div class="wallet-badge" style="margin: 0;">
+                    <label>Balance</label>
+                    <span id="walletBalance">₦0.00</span>
+                </div>
+                <button onclick="logout()" style="background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: bold;">Logout</button>
             </div>
         </div>
         
         <!-- Wallet Top-Up Card -->
         <div class="card">
             <h3><i class="fa-solid fa-wallet" style="color:var(--accent-blue)"></i> Wallet Top-Up</h3>
-            <label>Username / User ID:</label>
-            <input type="text" id="userId" value="william_123" onchange="fetchWallet()">
+            <input type="hidden" id="userId" value="">
             
             <label>Quick Fund Presets (NGN):</label>
             <div class="preset-buttons">
@@ -402,14 +408,26 @@
         let countdownInterval = null;
 
         window.onload = function() {
+            const currentUsername = localStorage.getItem('fred_username');
+            if (!currentUsername) {
+                // If not logged in, bounce back to login page
+                window.location.href = 'index.html';
+                return;
+            }
+            document.getElementById('displayUser').innerText = currentUsername;
+            document.getElementById('userId').value = currentUsername;
             fetchWallet();
+        }
+
+        function logout() {
+            localStorage.removeItem('fred_username');
+            window.location.href = 'index.html';
         }
 
         function setAmount(val) {
             document.getElementById('fundAmount').value = val;
         }
 
-        // Modal Controls
         function openModal() {
             document.getElementById('serviceModal').style.display = 'flex';
             document.getElementById('serviceSearch').value = '';
@@ -420,18 +438,15 @@
             document.getElementById('serviceModal').style.display = 'none';
         }
 
-        // Handle Custom Unlisted Service
         function rentCustomService() {
             const customName = document.getElementById('customServiceName').value.trim();
             if (!customName) {
                 alert("Please enter a service name first.");
                 return;
             }
-            // Default generic fallback price for unlisted services (e.g. ₦350)
             rentNumber(customName, 350.00);
         }
 
-        // Live Search Filter inside Popup
         function filterServices() {
             const input = document.getElementById('serviceSearch').value.toLowerCase();
             const rows = document.getElementsByClassName('service-row');
@@ -591,3 +606,5 @@
     </script>
 </body>
 </html>
+
+

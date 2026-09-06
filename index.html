@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FredOnly - Instant Virtual Number Marketplace</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #07090e;
+            --bg-card: #0f172a;
+            --bg-input: #1e293b;
+            --border-color: #334155;
+            --accent-blue: #38bdf8;
+            --accent-green: #22c55e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --error-red: #ef4444;
+        }
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: var(--bg-main); 
+            color: var(--text-main); 
+            margin: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .login-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 35px 40px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+        .logo { font-size: 28px; font-weight: 900; color: var(--accent-blue); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .logo span { color: #fff; font-weight: 400; font-size: 14px; background: rgba(56, 189, 248, 0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(56, 189, 248, 0.2); }
+        p.subtitle { color: var(--text-muted); font-size: 13px; margin-bottom: 25px; }
+        
+        .auth-tabs {
+            display: flex;
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 25px;
+            border: 1px solid var(--border-color);
+        }
+        .auth-tab {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .auth-tab.active {
+            background: var(--accent-blue);
+            color: #07090e;
+            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .form-section { display: none; }
+        .form-section.active { display: block; animation: fadeIn 0.3s ease; }
+
+        label { display: block; text-align: left; font-size: 12px; color: var(--text-muted); margin-bottom: 6px; font-weight: 600; }
+        input { width: 100%; padding: 12px 14px; margin-bottom: 15px; background: var(--bg-input); color: white; border: 1px solid var(--border-color); border-radius: 10px; box-sizing: border-box; font-size: 14px; transition: all 0.2s; }
+        input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15); }
+        
+        button.submit-btn { background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; border: none; padding: 12px; width: 100%; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; transition: transform 0.1s, opacity 0.2s; }
+        button.submit-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        
+        #errorMsg { color: var(--error-red); font-size: 12px; margin-bottom: 15px; display: none; background: rgba(239, 68, 68, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .features { display: flex; justify-content: space-around; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px; font-size: 11px; color: var(--text-muted); }
+        .features div { display: flex; align-items: center; gap: 5px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo">
+            <i class="fa-solid fa-shield-halved" style="color:var(--accent-blue)"></i> Fred<span>OTP</span>
+        </div>
+        <p class="subtitle">Secure password-protected virtual numbers.</p>
+        
+        <div class="auth-tabs">
+            <button class="auth-tab active" onclick="switchTab('signin', event)">Sign In</button>
+            <button class="auth-tab" onclick="switchTab('signup', event)">Sign Up</button>
+        </div>
+
+        <div id="errorMsg"></div>
+
+        <!-- SIGN IN SECTION -->
+        <div id="signinSection" class="form-section active">
+            <form onsubmit="handleAuth(event, 'signin')">
+                <label>Username</label>
+                <input type="text" id="signinUser" placeholder="Enter your username" required>
+                
+                <label>Password</label>
+                <input type="password" id="signinPass" placeholder="Enter your password" required>
+                
+                <button type="submit" class="submit-btn"><i class="fa-solid fa-right-to-bracket"></i> Sign In</button>
+            </form>
+        </div>
+
+        <!-- SIGN UP SECTION -->
+        <div id="signupSection" class="form-section">
+            <form onsubmit="handleAuth(event, 'signup')">
+                <label>Choose Username</label>
+                <input type="text" id="signupUser" placeholder="Choose a unique username" required>
+                
+                <label>Choose Password</label>
+                <input type="password" id="signupPass" placeholder="Create a secure password" required>
+                
+                <button type="submit" class="submit-btn" style="background: linear-gradient(135deg, #10b981, #059669);"><i class="fa-solid fa-user-plus"></i> Create Account</button>
+            </form>
+        </div>
+
+        <div class="features">
+            <div><i class="fa-solid fa-bolt" style="color:var(--accent-green)"></i> Instant Delivery</div>
+            <div><i class="fa-solid fa-wallet" style="color:var(--accent-blue)"></i> Paystack Funded</div>
+            <div><i class="fa-solid fa-lock" style="color:var(--accent-purple)"></i> Secure API</div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://fred-otp-backend.onrender.com";
+
+        function switchTab(tab, evt) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('signinSection').classList.remove('active');
+            document.getElementById('signupSection').classList.remove('active');
+            document.getElementById('errorMsg').style.display = 'none';
+
+            if (tab === 'signin') {
+                evt.currentTarget.classList.add('active');
+                document.getElementById('signinSection').classList.add('active');
+            } else {
+                evt.currentTarget.classList.add('active');
+                document.getElementById('signupSection').classList.add('active');
+            }
+        }
+
+        async function handleAuth(event, mode) {
+            event.preventDefault();
+            const errBox = document.getElementById('errorMsg');
+            errBox.style.display = 'none';
+
+            const username = document.getElementById(mode === 'signin' ? 'signinUser' : 'signupUser').value.trim();
+            const password = document.getElementById(mode === 'signin' ? 'signinPass' : 'signupPass').value.trim();
+
+            const endpoint = mode === 'signin' ? `${API_URL}/api/v1/auth/signin` : `${API_URL}/api/v1/auth/signup`;
+
+            try {
+                const res = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await res.json();
+                
+                if (!res.ok || data.error) {
+                    errBox.innerText = data.error || "Authentication failed. Check details.";
+                    errBox.style.display = 'block';
+                    return;
+                }
+
+                localStorage.setItem('fred_username', username);
+                window.location.href = 'dashboard.html';
+
+            } catch (err) {
+                errBox.innerText = "Network error connecting to backend server.";
+                errBox.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html>
+
+
