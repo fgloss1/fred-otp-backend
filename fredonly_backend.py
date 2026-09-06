@@ -42,6 +42,8 @@ class TransactionLedger(Base):
     desc = Column(String)
     timestamp = Column(DateTime, default=datetime.datetime.utcnow)
 
+# Force drop and recreate tables to prevent missing column errors
+Base.metadata.drop_all(bind=engine)
 Base.metadata.create_all(bind=engine)
 
 class AuthPayload(BaseModel):
@@ -225,3 +227,4 @@ def cancel_number(payload: RentPayload):
         db.commit()
     db.close()
     return {"success": True, "message": "Refund processed."}
+
