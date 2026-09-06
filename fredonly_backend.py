@@ -205,3 +205,23 @@ def get_inbox(phone_number: str):
             }
         ]
     }
+
+@app.post("/api/v1/numbers/cancel")
+def cancel_number(payload: RentPayload):
+    db = SessionLocal()
+    user = db.query(UserWallet).filter(UserWallet.user_id == payload.user_id).first()
+    
+    if user:
+        user.balance_ngn += 350.0 # Refund the exact cost
+        import uuid
+        tx = TransactionLedger(
+            id=str(uuid.uuid4()),
+            user_id=payload.user_id,
+            type="CREDIT",
+            amount=350.0,
+            desc=f"Refund: No SMS received for {payload.service_name}"
+        )
+        db.add(tx)
+        db.commit()
+    db.close()
+    return {"success": True, "message": "Refund processed."}

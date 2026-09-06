@@ -186,7 +186,78 @@
             }
         }
     </script>
+<!-- FRED APP INJECTION -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // Find the main green submit button
+        let buttons = document.querySelectorAll("button");
+        let mainButton = buttons[buttons.length - 1]; 
+        
+        if(mainButton) {
+            // CLONE it to sever all ties to your old conflicting JavaScript
+            let secureBtn = mainButton.cloneNode(true);
+            secureBtn.type = "button"; // This magic line stops your old form from submitting!
+            mainButton.parentNode.replaceChild(secureBtn, mainButton);
+            
+            secureBtn.addEventListener("click", async function(e) {
+                e.preventDefault();
+                
+                // Grab the credentials
+                let inputs = document.querySelectorAll("input");
+                let username = inputs[0].value;
+                let password = inputs[1].value;
+                
+                if(!username || !password) {
+                    alert("Please enter a username and password.");
+                    return;
+                }
+
+                // Are we logging in or signing up? Let's check the active button text!
+                let btnText = this.innerText.toLowerCase();
+                let isSignUp = btnText.includes("create") || btnText.includes("up");
+                let endpoint = isSignUp ? "/api/v1/auth/signup" : "/api/v1/auth/signin";
+                
+                let originalText = this.innerText;
+                this.innerText = "Processing...";
+                
+                try {
+                    let res = await fetch("https://fred-otp-backend.onrender.com" + endpoint, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ username: username, password: password })
+                    });
+                    let data = await res.json();
+                    
+                    if (data.success) {
+                        // Success! Save session and go to dashboard
+                        localStorage.setItem("fred_user", username);
+                        window.location.href = "dashboard.html";
+                    } else {
+                        // Create our own custom red error box to replace your old one
+                        let errBox = document.getElementById("fred-error");
+                        if(!errBox) {
+                            errBox = document.createElement("div");
+                            errBox.id = "fred-error";
+                            errBox.style = "color: #ff7675; border: 1px solid #ff7675; background: rgba(255, 118, 117, 0.1); padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-family: sans-serif;";
+                            inputs[0].parentNode.insertBefore(errBox, inputs[0]);
+                        }
+                        errBox.innerText = data.error || "Authentication failed.";
+                        this.innerText = originalText;
+                    }
+                } catch (err) {
+                    alert("Network error connecting to backend.");
+                    this.innerText = originalText;
+                }
+            });
+        }
+    });
+</script>
 </body>
 </html>
+
+
+
+
+
 
 

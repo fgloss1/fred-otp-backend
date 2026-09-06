@@ -604,7 +604,67 @@
             }, 2500);
         }
     </script>
+<!-- FRED APP INJECTION -->
+<script src="fred_app.js"></script>
+<script>
+    async function cancelAndRefund(serviceName) {
+        let currentUser = localStorage.getItem("fred_user");
+        if (!currentUser) return;
+        
+        let originalText = document.getElementById("cancel-btn").innerText;
+        document.getElementById("cancel-btn").innerText = "Refunding...";
+        
+        try {
+            let res = await fetch("https://fred-otp-backend.onrender.com/api/v1/numbers/cancel", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: currentUser, service_name: serviceName })
+            });
+            let data = await res.json();
+            
+            if(data.success) {
+                // Stop checking for SMS
+                if(typeof smsInterval !== 'undefined') clearInterval(smsInterval);
+                
+                // Reset UI
+                document.getElementById("active-number-display").innerHTML = "<span style='color:gray;'>Number cancelled.</span>";
+                document.getElementById("sms-inbox-display").innerHTML = "";
+                
+                // Refresh balance
+                if(typeof loadWallet === 'function') loadWallet();
+            }
+        } catch(err) {
+            alert("Error processing refund.");
+            document.getElementById("cancel-btn").innerText = originalText;
+        }
+    }
+
+    // Override the rentNumber function temporarily in the UI to show the cancel button
+    const originalRentNumber = rentNumber;
+    rentNumber = async function(service) {
+        await originalRentNumber(service);
+        // After renting, inject the cancel button into the UI
+        let activeDisplay = document.getElementById("active-number-display");
+        if(activeDisplay.innerText.includes(service.toUpperCase())) {
+            activeDisplay.innerHTML += <br><button id="cancel-btn" onclick="cancelAndRefund(' + service + ')" style="background:#ff7675; color:white; border:none; padding:5px 10px; margin-top:10px; cursor:pointer; border-radius:3px; font-size:12px;">Cancel & Refund ₦350</button>;
+        }
+    }
+</script>
+<div style="position:fixed; bottom:20px; right:20px; background:#1e272e; padding:15px; border-radius:10px; color:white; border:1px solid #0984e3; z-index:9999; width:300px; box-shadow: 0px 4px 10px rgba(0,0,0,0.5);">
+    <h3 style="margin:0 0 10px 0; font-family:sans-serif;">Live Test Panel</h3>
+    <div style="font-family:sans-serif;">Balance: <strong id="wallet-balance" style="color:#00b894;">₦0.00</strong></div>
+    <hr style="border-color:#333; margin:10px 0;">
+    <div id="active-number-display" style="color:#00d2d3; margin-bottom:10px; font-family:monospace; font-weight:bold;">No active numbers</div>
+    <div id="sms-inbox-display" style="font-family:sans-serif; margin-bottom:10px;"></div>
+    <hr style="border-color:#333; margin:10px 0;">
+    <button onclick="fundWallet(1000)" style="background:#00b894; color:white; border:none; padding:10px; width:100%; margin-bottom:10px; cursor:pointer; border-radius:5px; font-weight:bold;">+ Add ₦1000 Test Funds</button>
+    <button onclick="rentNumber('whatsapp')" style="background:#0984e3; color:white; border:none; padding:10px; width:100%; cursor:pointer; border-radius:5px; font-weight:bold;">Rent WhatsApp Number</button>
+    <div id="transaction-history" style="max-height:100px; overflow-y:auto; font-size:12px; margin-top:10px; font-family:monospace;"></div>
+</div>
 </body>
 </html>
+
+
+
 
 
