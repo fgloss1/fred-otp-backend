@@ -1,4 +1,4 @@
-﻿from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
@@ -1494,44 +1494,53 @@ def cancel_number(
 # ==========================================
 
 @app.get("/api/v1/status")
+def status():
+    provider_configured = bool(
+        FIVESIM_API_KEY
+        and FIVESIM_API_KEY != "YOUR_FIVESIM_API_KEY"
+    )
 
-def api_status():
+    provider_reachable = False
+    provider_http_status = None
+    provider_error_type = None
+
+    if provider_configured:
+        try:
+            profile_url = f"{FIVESIM_BASE_URL.rstrip('/')}/user/profile"
+
+            headers = {
+                "Authorization": f"Bearer {FIVESIM_API_KEY}",
+                "Accept": "application/json",
+            }
+
+            provider_response = requests.get(
+                profile_url,
+                headers=headers,
+                timeout=10,
+            )
+
+            provider_http_status = provider_response.status_code
+            provider_reachable = provider_response.status_code == 200
+
+            if not provider_reachable:
+                provider_error_type = "provider_rejected_request"
+
+        except Exception as exc:
+            provider_error_type = type(exc).__name__
 
     return {
-
         "success": True,
-
-        "api":
-        "Fred OTP API",
-
-        "version":
-        "2.0.0",
-
-        "authentication":
-        "JWT",
-
-        "provider_configured":
-        bool(FIVESIM_API_KEY),
-
-        "test_funding_enabled":
-        ENABLE_TEST_FUNDING
-
+        "api": "Fred OTP API",
+        "version": "2.0.0",
+        "authentication": "JWT",
+        "provider_configured": provider_configured,
+        "provider_reachable": provider_reachable,
+        "provider_http_status": provider_http_status,
+        "provider_error_type": provider_error_type,
+        "test_funding_enabled": bool(
+            globals().get("ENABLE_TEST_FUNDING", False)
+        ),
     }
-# ==========================================
-# SERVER STARTUP
-# ==========================================
-#
-# Allows:
-#     python fredonly_backend.py
-#
-# to actually start the FastAPI server.
-# ==========================================
-
-
-# ==================================================
-# FRED_WALLET_HISTORY_ENDPOINT_V1
-# ==================================================
-
 @app.get("/api/v1/wallet/history")
 def get_wallet_history(
     limit: int = 50,
